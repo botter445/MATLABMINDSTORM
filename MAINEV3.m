@@ -1,15 +1,20 @@
 global key;
+%brick = ConnectBrick('EVX'); or 'SUN'   
 %Things to do
 %1. Actually make the turn functions work and tune them
 %2. Actually test any of my code
 %3. Have fun
 InitKeyboard();
-
+brick.GyroCalibrate(4);
 while 1
     pause(0.1);
     switch key
         case 'q'  % Quit the loop
             break;
+        case 'j'
+            turnRight(brick);
+        case 'k'
+            turnLeft(brick);
         case 'w'
             brick.MoveMotorAngleRel('A', 100, 50, 'Coast');
             brick.MoveMotorAngleRel('B', 100, 50, 'Coast'); 
@@ -73,12 +78,11 @@ end
 function A = driveFromGreen(destination,brick)%either blue or yellow
         moveForward(brick);
         %drive forward
-        pause(2);
+        pause(12);
         turnLeft(brick);
         %turn right
         moveForward(brick)
-        while brick.UltrasonicDist(1) > 30
-        end
+        pause(17);
         stopMove(brick);
         turnLeft(brick);
         moveForward(brick);
@@ -197,28 +201,35 @@ function A = driveFromYellow(destination,brick)
 end 
 
 function A = turnRight(brick)
-        brick.MoveMotor('A', 100);
-        brick.MoveMotor('B', -100);
-        pause(2);%tbd
-        brick.MoveMotor('A', 0);
-        brick.MoveMotor('B', 0);
+        angle = brick.GyroAngle(4);
+        brick.MoveMotor('A',100);
+        brick.MoveMotor('B',-100);
+        while abs(angle - brick.GyroAngle(4)) < 90
+  
+        end
+        brick.MoveMotor('A',0);
+        brick.MoveMotor('B',0);
         A = 0;
 end
 function A = turnLeft(brick)
-        brick.MoveMotor('A', -100);
-        brick.MoveMotor('B', 100);
-        pause(2);%tbd
-        brick.MoveMotor('A', 0);
-        brick.MoveMotor('B', 0);
+        angle = brick.GyroAngle(4);
+        brick.MoveMotor('A',-100);
+        brick.MoveMotor('B',100);
+        while abs(angle - brick.GyroAngle(4)) < 90
+  
+        end
+        brick.MoveMotor('A',0);
+        brick.MoveMotor('B',0);
+        A = 0;
         A = 0;
 end
 function A = moveForward(brick)
-        brick.moveMotor("A",100);
-        brick.MoveMotor("B",100);
+        brick.MoveMotor('A',-100);
+        brick.MoveMotor('B',-100);
         A = 0;
 end
 function A = stopMove(brick)
-        brick.moveMotor("A",0);
-        brick.moveMotor("B",0);
+        brick.MoveMotor("A",0);
+        brick.MoveMotor("B",0);
         A = 0;
 end
