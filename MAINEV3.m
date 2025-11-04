@@ -57,6 +57,7 @@ while 1
             Destination = input("Input color destination (G,B,Y): ","s");
             fprintf('Current color sensed: %s\n', color);
             fprintf('Destination color set to: %s\n', Destination); 
+            pause(3);
             switch color
                 case "Green"
                     driveFromGreen(Destination,brick);
@@ -106,8 +107,7 @@ function A = milestonetwo(brick)
             brick.playTone(412,0.5,50);
             pause(0.1);
             brick.playTone(412,0.5,50);
-                        pause(0.1);
-
+            pause(0.1);
             brick.playTone(412,0.5,50);
             pause(1);
             moveForward(brick);
@@ -206,22 +206,23 @@ function A = driveFromBlue(destination,brick)
 end
 function A = driveFromYellow(destination,brick)
         moveForward(brick);
-        while brick.TouchPressed(3) ==0
+        while brick.TouchPressed(3) == 0
             pause(0.1);
         end
-        brick.MoveMotor('A',0);
-        brick.MoveMotor('B',0);
+        stopMove(brick);
+        pause(0.5);
         turnLeft(brick);
+        pause(0.5);
         moveForward(brick);
-        while brick.TouchPressed(3) ==0
+        while brick.TouchPressed(3) == 0
              pause(0.1);
         end
         brick.MoveMotor('A',0);
         brick.MoveMotor('B',0);
         turnLeft(brick);
         moveForward(brick);
-        pause(2);
-        moveStop(brick);
+        pause(2); 
+        stopMove(brick);
         if destination == "Blue" || destination == "B"
             turnLeft(brick);
             moveForward(brick);
@@ -275,15 +276,17 @@ end
 function A = turnRight(brick)
         brick.MoveMotorAngleRel('A', 100, 360, 'Coast');
         brick.MoveMotorAngleRel('B', 100, 360, 'Coast'); 
-        pause(1);
+        brick.WaitForMotor('A');
+
 
         angle = brick.GyroAngle(4);
         brick.StopAllMotors();
-        brick.MoveMotor('A',100);
-        brick.MoveMotor('B',-100);
+        brick.MoveMotor('A',50);
+        brick.MoveMotor('B',-50);
         brick.MoveMotorAngleRel('D', 100, -100, 'Brake'); 
         while abs(angle - brick.GyroAngle(4)) < 90
             pause(0.1);
+            disp(abs(angle - brick.GyroAngle(4)));
         end
         brick.MoveMotor('A',0);
         brick.MoveMotor('B',0);
@@ -295,16 +298,18 @@ end
 function A = turnLeft(brick)
         brick.MoveMotorAngleRel('A', 100, 360, 'Coast');
         brick.MoveMotorAngleRel('B', 100, 360, 'Coast'); 
-        pause(1);
+        brick.WaitForMotor('A');
         brick.StopAllMotors();
 
         angle = brick.GyroAngle(4);
 
-        brick.MoveMotor('A',-100);
-        brick.MoveMotor('B',100);
+        brick.MoveMotor('A',-50);
+        brick.MoveMotor('B',50);
         brick.MoveMotorAngleRel('D', 100, 100, 'Brake'); 
         while abs(angle - brick.GyroAngle(4)) < 90
             pause(0.1);
+            disp(abs(angle - brick.GyroAngle(4)));
+
         end
         brick.MoveMotor('A',0);
         brick.MoveMotor('B',0);
@@ -343,6 +348,8 @@ end
 function A = stopMove(brick)
         brick.MoveMotor('A',0);
         brick.MoveMotor('B',0);
+        brick.WaitForMotor('A');
+
         A = 0;
 
 end
