@@ -8,10 +8,17 @@ InitKeyboard();
 while 1
     pause(0.1);
     switch key
-        case 'q'  % Quit the loop
+        case '`'  % Quit the loop
             break;
+        case 'q'
+            brick.MoveMotorAngleRel('D', 100, 3, 'Coast');
+        case 'e'
+            brick.MoveMotorAngleRel('D', -100, 3, 'Coast');
         case 'j'
             turnRight(brick);
+        case 'y'
+            brick.GyroCalibrate(4);
+            moveForwardGyro(brick,5);
         case 'k'
             turnLeft(brick);
         case 'm'
@@ -22,7 +29,8 @@ while 1
         case 's'
             brick.MoveMotor('A',-100);
             brick.MoveMotor('B',-100);
-            
+        case 't'
+            milestonetwo(brick);
         case 'a'
             
             brick.MoveMotor('A',-100);
@@ -32,13 +40,17 @@ while 1
             brick.MoveMotor('A',100);
             brick.MoveMotor('B',-100);
         case 'z'
-            brick.MoveMotorAngleRel('C', 100, 20, 'Coast');
+            brick.MoveMotorAngleRel('C', 10, 5, 'Coast');
         case 'x'
-            brick.MoveMotorAngleRel('C', -100,  20, 'Coast');
-        case 'e'
+            brick.MoveMotorAngleRel('C', -10,  5, 'Coast');
+        case '2'
             brick.MoveMotor('C', 0);  % Stop motor C
             brick.MoveMotor('A', 0);
             brick.MoveMotor('B', 0);
+        case 'n' 
+            brick.GyroCalibrate(4);
+
+            exhaustiveSearch(brick);
         case 'l'
             brick.GyroCalibrate(4);
             color = senseColor(brick);
@@ -75,12 +87,41 @@ function A = senseColor(brick)
         A = 'I dont know';
     end
 end   
+function A = milestonetwo(brick)
+    funcolor = senseColor(brick);
+    switch funcolor
+        case 'Red'
+            stopMove(brick);
+            pause(1);
+            moveForward(brick);
+        case 'Blue'
+            stopMove(brick);
+            brick.playTone(412,0.5,50);
+            pause(0.1);
+            brick.playTone(412,0.5,50);
+            pause(1);
+            moveForward(brick);
+        case 'Green'
+            stopMove(brick);
+            brick.playTone(412,0.5,50);
+            pause(0.1);
+            brick.playTone(412,0.5,50);
+                        pause(0.1);
+
+            brick.playTone(412,0.5,50);
+            pause(1);
+            moveForward(brick);
+    end
+    A=0;
+
+end
 function A = driveFromGreen(destination,brick)%either blue or yellow
         moveForward(brick);
         %drive forward
         while brick.TouchPressed(3) == 0
             pause(0.1);
-        end        
+        end
+        disp(1);
         turnLeft(brick);
         %turn right
         pause(0.5);
@@ -208,7 +249,29 @@ function A = driveFromYellow(destination,brick)
         end
         A = 0;
 end 
+function A = exhaustiveSearch(brick)
+        while 1
+            if (brick.UltrasonicDist(1)<40 && brick.TouchPressed(3) == 0)
 
+            
+            elseif (brick.UltrasonicDist(1)<40 && brick.TouchPressed(3) == 1)
+                turnLeft(brick);
+
+            elseif (brick.UltrasonicDist(1)>40 && brick.TouchPressed(3) == 0)
+                turnRight(brick);
+
+            elseif (brick.UltrasonicDist(1)>40 && brick.TouchPressed(3) == 1)
+                turnRight(brick);
+
+            end
+            brick.MoveMotor('A',-50); 
+            brick.MoveMotor('B',-50);
+
+            pause(3);   
+            brick.MoveMotor('A',0);
+            brick.MoveMotor('B',0);
+        end
+end
 function A = turnRight(brick)
         brick.MoveMotorAngleRel('A', 100, 360, 'Coast');
         brick.MoveMotorAngleRel('B', 100, 360, 'Coast'); 
@@ -218,11 +281,15 @@ function A = turnRight(brick)
         brick.StopAllMotors();
         brick.MoveMotor('A',100);
         brick.MoveMotor('B',-100);
+        brick.MoveMotorAngleRel('D', 100, -100, 'Brake'); 
         while abs(angle - brick.GyroAngle(4)) < 90
             pause(0.1);
         end
         brick.MoveMotor('A',0);
         brick.MoveMotor('B',0);
+        brick.MoveMotorAngleRel('D', 100, 100, 'Brake'); 
+        brick.WaitForMotor('D');
+
         A = 0;
 end
 function A = turnLeft(brick)
@@ -235,20 +302,47 @@ function A = turnLeft(brick)
 
         brick.MoveMotor('A',-100);
         brick.MoveMotor('B',100);
+        brick.MoveMotorAngleRel('D', 100, 100, 'Brake'); 
         while abs(angle - brick.GyroAngle(4)) < 90
             pause(0.1);
         end
         brick.MoveMotor('A',0);
         brick.MoveMotor('B',0);
+        brick.MoveMotorAngleRel('D', 100, -100, 'Brake'); 
+        brick.WaitForMotor('D');
         A = 0;
 end
 function A = moveForward(brick)
+
         brick.MoveMotor('A',-100);
         brick.MoveMotor('B',-100);
         A = 0;
 end
-function A = stopMove(brick)
-        brick.MoveMotor("A",0);
-        brick.MoveMotor("B",0);
+function A = moveForwardGyro(brick,time)
+        %t step value is built in time is the length
+        angle = brick.GyroAngle(4);
+        i = 0;
+        err = angle;
+        currerr = err;
+        kp = 25;            
+        brick.MoveMotor('A',-100);
+        brick.MoveMotor('B',-100);
+        while i < (time/0.1)
+            pause(0.1);
+            err = brick.GyroAngle(4)-angle;
+            
+            brick.MoveMotorAngleRel('D', 100, (currerr-err)*kp, 'Coast');
+            currerr = err;
+            disp(err);
+            i= i + 1;
+        end
+        brick.MoveMotor('A',0);
+        brick.MoveMotor('B',0);
         A = 0;
+end
+function A = stopMove(brick)
+        brick.MoveMotor('A',0);
+        brick.MoveMotor('B',0);
+        A = 0;
+
 end
